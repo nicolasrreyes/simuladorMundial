@@ -96,3 +96,39 @@ https://github.com/nicolasrreyes/simuladorMundial
 - Este proyecto es una aplicacion FastAPI, por lo que GitHub Pages no ejecuta el backend.
 - Para compartir una demo ejecutable en la web se recomienda desplegar en un servicio compatible con Python/FastAPI, por ejemplo Render, Railway, Fly.io o Azure App Service.
 - El informe QA queda versionado en `reports/qa_report.html`.
+
+## Deploy en Render
+
+El proyecto incluye `render.yaml` para crear el servicio web desde Render Blueprint.
+
+Configuracion principal:
+
+```yaml
+buildCommand: python -m pip install -r requirements.txt
+startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Render asigna automaticamente la variable `PORT`, por eso no se debe hardcodear `8000` en produccion.
+
+Variables incluidas en `render.yaml`:
+
+```text
+PYTHON_VERSION=3.11.9
+ENVIRONMENT=production
+```
+
+## Variables de entorno locales
+
+El archivo `.env` local no se versiona porque puede contener secretos o configuracion personal. Para documentar variables disponibles, usar:
+
+```text
+.env.example
+```
+
+Para preparar un entorno local:
+
+```bash
+copy .env.example .env
+```
+
+Actualmente la app no requiere secretos para funcionar. El `.env` queda preparado para configuraciones futuras como base de datos persistente, credenciales o integraciones externas.
