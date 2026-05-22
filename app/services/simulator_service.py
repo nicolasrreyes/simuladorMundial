@@ -1,6 +1,7 @@
 import random
 from dataclasses import dataclass
 from itertools import combinations
+from math import exp
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -40,6 +41,43 @@ DEFAULT_TEAMS = [
 ]
 
 POSITIONS = ["Arquero", "Defensor", "Mediocampista", "Delantero"]
+
+# Perfiles aproximados basados en ranking FIFA masculino del 1 de abril de 2026,
+# historial mundialista y favoritismo publico/mercado consultado en mayo de 2026.
+TEAM_PROFILES = {
+    "Francia": {"rank": 1, "titles": 2, "semis": 7, "champion_probability": 0.16},
+    "Espana": {"rank": 2, "titles": 1, "semis": 2, "champion_probability": 0.18},
+    "Argentina": {"rank": 3, "titles": 3, "semis": 6, "champion_probability": 0.11},
+    "Inglaterra": {"rank": 4, "titles": 1, "semis": 3, "champion_probability": 0.14},
+    "Portugal": {"rank": 5, "titles": 0, "semis": 2, "champion_probability": 0.08},
+    "Brasil": {"rank": 6, "titles": 5, "semis": 11, "champion_probability": 0.11},
+    "Paises Bajos": {"rank": 7, "titles": 0, "semis": 5, "champion_probability": 0.05},
+    "Marruecos": {"rank": 8, "titles": 0, "semis": 1, "champion_probability": 0.025},
+    "Belgica": {"rank": 9, "titles": 0, "semis": 2, "champion_probability": 0.03},
+    "Alemania": {"rank": 10, "titles": 4, "semis": 13, "champion_probability": 0.07},
+    "Croacia": {"rank": 11, "titles": 0, "semis": 3, "champion_probability": 0.025},
+    "Colombia": {"rank": 12, "titles": 0, "semis": 0, "champion_probability": 0.035},
+    "Senegal": {"rank": 13, "titles": 0, "semis": 0, "champion_probability": 0.015},
+    "Mexico": {"rank": 14, "titles": 0, "semis": 0, "champion_probability": 0.012},
+    "Estados Unidos": {"rank": 15, "titles": 0, "semis": 1, "champion_probability": 0.02},
+    "Uruguay": {"rank": 16, "titles": 2, "semis": 5, "champion_probability": 0.025},
+    "Japon": {"rank": 17, "titles": 0, "semis": 0, "champion_probability": 0.012},
+    "Iran": {"rank": 18, "titles": 0, "semis": 0, "champion_probability": 0.006},
+    "Ecuador": {"rank": 19, "titles": 0, "semis": 0, "champion_probability": 0.01},
+    "Corea del Sur": {"rank": 20, "titles": 0, "semis": 1, "champion_probability": 0.008},
+    "Australia": {"rank": 21, "titles": 0, "semis": 0, "champion_probability": 0.005},
+    "Argelia": {"rank": 22, "titles": 0, "semis": 0, "champion_probability": 0.006},
+    "Egipto": {"rank": 23, "titles": 0, "semis": 0, "champion_probability": 0.006},
+    "Canada": {"rank": 24, "titles": 0, "semis": 0, "champion_probability": 0.01},
+    "Panama": {"rank": 25, "titles": 0, "semis": 0, "champion_probability": 0.003},
+    "Costa de Marfil": {"rank": 26, "titles": 0, "semis": 0, "champion_probability": 0.006},
+    "Paraguay": {"rank": 27, "titles": 0, "semis": 0, "champion_probability": 0.006},
+    "Tunez": {"rank": 28, "titles": 0, "semis": 0, "champion_probability": 0.003},
+    "Congo DR": {"rank": 29, "titles": 0, "semis": 0, "champion_probability": 0.002},
+    "Uzbekistan": {"rank": 30, "titles": 0, "semis": 0, "champion_probability": 0.003},
+    "Qatar": {"rank": 31, "titles": 0, "semis": 0, "champion_probability": 0.003},
+    "Sudafrica": {"rank": 32, "titles": 0, "semis": 0, "champion_probability": 0.003},
+}
 
 
 @dataclass
@@ -219,7 +257,7 @@ class SimulatorService:
             standings = {team.id: StandingAccumulator(team=team) for team in group_teams}
             matches: list[MatchResult] = []
             for home, away in combinations(group_teams, 2):
-                home_goals, away_goals = random.randint(0, 5), random.randint(0, 5)
+                home_goals, away_goals = self._simulate_match_goals(home, away)
                 self._apply_group_result(standings[home.id], standings[away.id], home_goals, away_goals)
                 goal_events = self._generate_goal_events(home, home_goals, stats, "group")
                 goal_events.extend(self._generate_goal_events(away, away_goals, stats, "group"))
@@ -326,12 +364,12 @@ class SimulatorService:
         stats: dict[int, PlayerStatAccumulator],
         stage: str,
     ) -> MatchResult:
-        home_goals, away_goals = random.randint(0, 5), random.randint(0, 5)
+        home_goals, away_goals = self._simulate_match_goals(home, away)
         goal_events = self._generate_goal_events(home, home_goals, stats, stage)
         goal_events.extend(self._generate_goal_events(away, away_goals, stats, stage))
         decided_by = None
         if home_goals == away_goals:
-            winner = random.choice([home, away])
+            winner = self._weighted_winner(home, away)
             decided_by = "penales"
         else:
             winner = home if home_goals > away_goals else away
@@ -344,6 +382,41 @@ class SimulatorService:
             winner=winner.name,
             decided_by=decided_by,
         )
+
+    def _simulate_match_goals(self, home: Team, away: Team) -> tuple[int, int]:
+        home_strength = self._team_strength(home.name)
+        away_strength = self._team_strength(away.name)
+        home_goals = self._weighted_goal_count(home_strength, away_strength)
+        away_goals = self._weighted_goal_count(away_strength, home_strength)
+        return home_goals, away_goals
+
+    def _weighted_goal_count(self, attack_strength: float, defense_strength: float) -> int:
+        ratio = attack_strength / max(defense_strength, 0.01)
+        base_weights = [0.19, 0.27, 0.24, 0.16, 0.09, 0.05]
+        adjusted_weights = []
+        for goals, weight in enumerate(base_weights):
+            if goals == 0:
+                adjusted = weight / max(ratio ** 0.45, 0.35)
+            else:
+                adjusted = weight * (ratio ** (goals * 0.24))
+            adjusted_weights.append(adjusted)
+        return random.choices(range(6), weights=adjusted_weights, k=1)[0]
+
+    def _weighted_winner(self, home: Team, away: Team) -> Team:
+        home_strength = self._team_strength(home.name)
+        away_strength = self._team_strength(away.name)
+        return random.choices([home, away], weights=[home_strength, away_strength], k=1)[0]
+
+    def _team_strength(self, team_name: str) -> float:
+        profile = TEAM_PROFILES.get(
+            team_name,
+            {"rank": 48, "titles": 0, "semis": 0, "champion_probability": 0.002},
+        )
+        rank_score = max(0, 50 - profile["rank"]) / 49
+        history_score = min((profile["titles"] * 0.09) + (profile["semis"] * 0.018), 0.32)
+        probability_score = min(profile["champion_probability"] * 2.6, 0.48)
+        raw_strength = -0.2 + (rank_score * 1.25) + history_score + probability_score
+        return 0.65 + (1.95 / (1 + exp(-raw_strength)))
 
     def _build_player_stats(self, teams: list[Team]) -> dict[int, PlayerStatAccumulator]:
         return {
