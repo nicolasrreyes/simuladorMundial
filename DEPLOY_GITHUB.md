@@ -117,6 +117,22 @@ PYTHON_VERSION=3.11.9
 ENVIRONMENT=production
 ```
 
+El proyecto tambien incluye `.python-version` con:
+
+```text
+3.11.9
+```
+
+Esto fuerza una version compatible con las dependencias del proyecto. Es importante porque Render puede usar una version default mas nueva, por ejemplo Python 3.14, y algunas dependencias como `pydantic-core` pueden intentar compilarse desde Rust en vez de instalar un wheel precompilado.
+
+Si el servicio fue creado manualmente en Render y no como Blueprint, configurar tambien en el Dashboard:
+
+```text
+PYTHON_VERSION=3.11.9
+```
+
+Luego ejecutar un nuevo deploy manual desde Render.
+
 ## Variables de entorno locales
 
 El archivo `.env` local no se versiona porque puede contener secretos o configuracion personal. Para documentar variables disponibles, usar:
