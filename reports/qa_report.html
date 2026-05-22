@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Informe Final de QA - Mundial 2026 Simulator</title>
+    <style>
+      :root {
+        --navy: #061a36;
+        --navy-soft: #0b2a55;
+        --line: #d8dee9;
+        --muted: #667085;
+        --surface: #f5f7fb;
+        --success: #157347;
+        --warning: #b7791f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: #17243a;
+        background: #ffffff;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.45;
+      }
+
+      .page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 42px;
+      }
+
+      header {
+        padding: 30px;
+        color: #ffffff;
+        background: var(--navy);
+        border-radius: 8px;
+      }
+
+      header p {
+        margin: 8px 0 0;
+        color: #dbe4f0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      h2 {
+        margin: 30px 0 12px;
+        color: var(--navy);
+        font-size: 20px;
+      }
+
+      h3 {
+        color: var(--navy-soft);
+        font-size: 16px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .metric {
+        padding: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--navy);
+        font-size: 24px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .panel {
+        padding: 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 13px;
+      }
+
+      th {
+        color: #ffffff;
+        background: var(--navy-soft);
+        text-align: left;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      .status-pass {
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .status-risk {
+        color: var(--warning);
+        font-weight: 700;
+      }
+
+      .go {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 14px;
+        color: #ffffff;
+        background: var(--success);
+        border-radius: 4px;
+        font-weight: 700;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .page {
+          padding: 24px;
+        }
+
+        .panel,
+        header,
+        .metric {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>Informe Final de QA - Mundial 2026 Simulator</h1>
+        <p>Evaluacion ejecutiva de calidad para backend FastAPI, ABMs, sorteo, simulacion completa y estadisticas del torneo.</p>
+      </header>
+
+      <section class="summary-grid">
+        <div class="metric">
+          <strong>10</strong>
+          <span>Escenarios automatizados</span>
+        </div>
+        <div class="metric">
+          <strong>API</strong>
+          <span>FastAPI + TestClient</span>
+        </div>
+        <div class="metric">
+          <strong>&gt;80%</strong>
+          <span>Cobertura objetivo</span>
+        </div>
+        <div class="metric">
+          <strong>GO</strong>
+          <span>Recomendacion QA</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Resumen Ejecutivo</h2>
+        <p>
+          El modulo del Mundial 2026 fue validado sobre los flujos criticos definidos: autogeneracion de 32 equipos,
+          sorteo de grupos con restriccion de confederaciones, simulacion completa de fase de grupos y eliminatorias,
+          consistencia de estadisticas individuales, y ABMs de equipos y jugadores.
+        </p>
+        <p>
+          La suite automatizada cubre casos felices, errores de validacion, conflictos de datos, recursos inexistentes
+          y reglas de negocio propias del torneo. El resultado esperado es apto para integracion continua local y sirve
+          como base para medir cobertura real con pytest-cov.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>Matriz de Escenarios de Prueba</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Area</th>
+              <th>Escenario</th>
+              <th>Resultado Esperado</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>QA-01</td>
+              <td>Datos base</td>
+              <td>Startup autogenera exactamente 32 equipos con 23 jugadores cada uno.</td>
+              <td>32 equipos, 8 grupos validos y planteles completos.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-02</td>
+              <td>Sorteo</td>
+              <td>POST /simulator/draw distribuye equipos sin repetir confederacion por grupo.</td>
+              <td>8 grupos de 4 equipos, confederaciones unicas por grupo.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-03</td>
+              <td>Sorteo</td>
+              <td>Distribucion imposible por exceso de equipos de una confederacion.</td>
+              <td>Respuesta HTTP 409 con mensaje claro.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-04</td>
+              <td>Simulador</td>
+              <td>POST /simulator/run ejecuta torneo completo.</td>
+              <td>8 grupos, rondas [8, 4, 2, 1] y campeon informado.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-05</td>
+              <td>Estadisticas</td>
+              <td>Goles y asistencias de jugadores coinciden con eventos de partidos.</td>
+              <td>Totales consistentes entre marcadores, eventos y rankings.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-06</td>
+              <td>ABM Equipos</td>
+              <td>Crear, consultar, actualizar y eliminar equipo.</td>
+              <td>HTTP 201, 200, 200 y 204 respectivamente.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-07</td>
+              <td>ABM Equipos</td>
+              <td>Duplicado, grupo invalido y recurso inexistente.</td>
+              <td>HTTP 409, 422 y 404 respectivamente.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-08</td>
+              <td>ABM Jugadores</td>
+              <td>Crear, listar por equipo, actualizar y eliminar jugador.</td>
+              <td>HTTP 201, 200, 200 y 204 respectivamente.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-09</td>
+              <td>ABM Jugadores</td>
+              <td>Equipo inexistente, dorsal invalido y jugador inexistente.</td>
+              <td>HTTP 404, 422 y 404 respectivamente.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+            <tr>
+              <td>QA-10</td>
+              <td>Contrato API</td>
+              <td>Respuesta incluye resultados de grupos, bracket, goleadores, asistidores y mejor jugador.</td>
+              <td>Contrato completo disponible para UI y clientes externos.</td>
+              <td class="status-pass">Aprobado</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Metrica Estimada de Cobertura</h2>
+        <p>
+          La cobertura funcional estimada se ubica en el rango <strong>80%-85%</strong> sobre los flujos criticos del
+          modulo, considerando routers, servicios, repositorios y reglas principales del simulador.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th>Cobertura Esperada</th>
+              <th>Observacion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Routers de Equipos/Jugadores</td>
+              <td>&gt;85%</td>
+              <td>Casos felices y errores HTTP principales cubiertos.</td>
+            </tr>
+            <tr>
+              <td>Servicio de Sorteo</td>
+              <td>&gt;80%</td>
+              <td>Validacion de distribucion valida e imposible cubierta.</td>
+            </tr>
+            <tr>
+              <td>Servicio de Simulacion</td>
+              <td>&gt;80%</td>
+              <td>Estructura del torneo y consistencia estadistica cubiertas.</td>
+            </tr>
+            <tr>
+              <td>Frontend</td>
+              <td class="status-risk">Pendiente E2E formal</td>
+              <td>Validado por smoke test manual/asistido; se recomienda Playwright para regresion visual.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">Para medicion exacta se recomienda ejecutar: pytest --cov=app --cov-report=html.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Conclusion Tecnica QA</h2>
+        <p>
+          El simulador cumple con los criterios funcionales centrales: datos consistentes, reglas de sorteo aplicadas,
+          torneo matematicamente cerrado, estadisticas derivadas de los partidos y ABMs robustos ante entradas invalidas.
+        </p>
+        <p>
+          Riesgo residual bajo: la aleatoriedad puede producir escenarios deportivos extremos, pero no inconsistencias
+          estructurales. Se recomienda incorporar tests end-to-end del frontend y cobertura automatizada formal en CI.
+        </p>
+        <span class="go">Recomendacion: GO para entorno local/demo y base apta para evolucion productiva</span>
+      </section>
+    </main>
+  </body>
+</html>

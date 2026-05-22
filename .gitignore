@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+*.db
+*.sqlite
+*.sqlite3
+.env
+mundial-simulator-smoke.png
